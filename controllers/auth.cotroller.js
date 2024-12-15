@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import User from "../models/user.models.js";
 import { generateToken } from "../utils/jwt.js";
+import Admin from "../models/admin.models.js";
 
 /**
  * Sign-up function
@@ -11,26 +12,30 @@ import { generateToken } from "../utils/jwt.js";
  *
  * @returns {Object} Response indicating success or failure of the sign-up process.
  */
-
 export const signUp = async (req, res) => {
   try {
     const { fullName, email, phone, password, confirmPassword } = req.body;
 
+    // Check if all required fields are provided
     if (!fullName || !email || !phone || !password || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Check if passwords match
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match." });
     }
 
+    // Check if the email is already in use by a user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "Email already in use." });
     }
 
+    // Hash the password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create new user object and save to the database
     const newUser = new User({
       fullName,
       email,
@@ -40,6 +45,7 @@ export const signUp = async (req, res) => {
 
     await newUser.save();
 
+    // Generate a token for the new user
     const token = generateToken(newUser);
 
     // Send a success response with user details
@@ -66,28 +72,37 @@ export const logIn = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Ensure both email and password are provided
     if (!email || !password) {
       return res
         .status(400)
         .json({ message: "Email and password are required." });
     }
 
+    // Check if user or admin exists
     const existingUser = await User.findOne({ email });
-    if (!existingUser) {
+    const existingAdmin = await Admin.findOne({ email });
+
+    // If no user or admin exists with the email
+    if (!existingUser && !existingAdmin) {
       return res.status(400).json({ message: "Invalid email or password." });
     }
 
-    const isMatch = await bcrypt.compare(password, existingUser.password);
+    let user = existingUser || existingAdmin; // Select user or admin based on existence
+
+    // Compare the entered password with the hashed password in the database
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password." });
     }
 
-    const token = generateToken(existingUser);
+    // Generate a token for the user/admin
+    const token = generateToken(user);
 
-    res
-      .status(200)
-      .json({ message: "Login successful!", token, user: existingUser });
+    // Respond with success message and token
+    res.status(200).json({ message: "Login successful!", token, user });
   } catch (error) {
+    // Handle unexpected errors
     res.status(500).json({ message: "Something went wrong.", error });
     console.error(error);
   }
