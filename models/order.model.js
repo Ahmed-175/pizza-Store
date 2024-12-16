@@ -13,6 +13,7 @@ const OrderSchema = new mongoose.Schema(
     statusOrder: {
       type: String,
       enum: ["finished", "unfinished"],
+      default : "unfinished"
     },
   },
   { timestamps: true }

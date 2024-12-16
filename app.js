@@ -5,6 +5,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.routes.js";
 import connectDb from "./Db/connectionDB.js";
 import adminRoutes from "./routes/adminRoutes.routes.js";
+import userRoutes from "./routes/userRoutes.routes.js"
 
 const app = express();
 const PORT = process.env.PORT;
@@ -25,6 +26,7 @@ app.use(
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/user" , userRoutes )
 
 app.listen(PORT, () => {
   console.log("server running on port ", PORT);

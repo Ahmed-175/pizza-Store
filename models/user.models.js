@@ -16,8 +16,13 @@ const userSchema = new mongoose.Schema({
   orders: {
     type: [mongoose.Schema.ObjectId], // Array of references to Product documents
     default: [], // Default is an empty array
-    ref: "Product", // Reference to the Product model
+    ref: "Order", // Reference to the Product model
   },
+  cart : {
+    type : [mongoose.Schema.ObjectId],
+    ref : "Product"
+  }
+
 });
 
 // Create the User model from the schema
